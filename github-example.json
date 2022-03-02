@@ -1,0 +1,20 @@
+{
+  "user_details": [
+    {
+      "general": {
+        "uid": "peter.quill",
+        "firstname": "Peter",
+        "lastname": "Quill",
+        "email": "peter.quill@guardians.com"
+      },
+      "github": {
+        "username": "starlord",
+        "state": "present",
+        "role": "member",
+        "teams": [
+          "Guardians"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+---
+- fail: msg="aws_api_url is unset"
+  when: aws_api_url is undefined
+- fail: msg="aws_api_token is unset"
+  when: aws_api_token is undefined
+
+- fail:
+    msg: |-
+      group_state must be either "present" or "absent"
+  when: not ((group_state == "present") or (group_state == "absent"))
+
+- include_tasks: exists.yml
+
+- include_tasks: create.yml
+  when: group_state == "present" and group_exists_response.json.totalResults == 0
+
+- include_tasks: delete.yml
+  when: group_state == "absent" and group_exists_response.json.totalResults == 1

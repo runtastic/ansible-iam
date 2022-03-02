@@ -1,0 +1,14 @@
+- name: Manage AWS users
+  hosts: localhost
+  tasks:
+    - include_role:
+        name: aws_user
+      vars:
+        user_state: '{{ item.aws.state | default("present") }}'
+        user_properties:
+          email: "{{ item.general.email }}"
+          familyName: "{{ item.general.lastname }}"
+          givenName: "{{ item.general.firstname }}"
+          groups: "{{ item.aws.groups | default([]) }}"
+      loop: "{{ user_details }}"
+      when: item.aws is defined

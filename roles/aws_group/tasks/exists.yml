@@ -1,0 +1,17 @@
+---
+
+- name: "Check AWS group {{ group_properties.displayName }}"
+  uri:
+    url: "{{ aws_api_url }}/Groups?filter=displayName%20eq%20%22{{ group_properties.displayName | urlencode }}%22"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ aws_api_token }}"
+    status_code:
+      - 200
+  when: group_properties is defined
+  register: group_exists_response
+  
+- name: "Set AWS Group ID"
+  set_fact:
+    aws_group_id: "{{ group_exists_response.json.Resources[0].id }}"
+  when: group_exists_response.json.Resources[0] is defined

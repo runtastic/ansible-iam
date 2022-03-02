@@ -1,0 +1,14 @@
+---
+- include_tasks: exists.yml
+
+- include_tasks: create.yml
+  when: user_state == "present" and github_user_exists.status == 404
+
+- include_tasks: manage_teams.yml
+  when: user_state == "present"
+
+- include_tasks: update.yml
+  when: user_state == "present" and github_user_exists.json.state == "active"
+
+- include_tasks: delete.yml
+  when: user_state == "absent" and github_user_exists.status == 200

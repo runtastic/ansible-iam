@@ -1,0 +1,92 @@
+- name: "Get all AWS groups"
+  uri:
+    url: "{{ aws_api_url }}/Groups"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ aws_api_token }}"
+    status_code:
+      - 200
+  when: user_properties is defined
+  register: aws_groups
+
+- name: "Get groups where the user {{ user_properties.email }} is a member"
+  uri:
+    url: "{{ aws_api_url }}/Groups?filter=id+eq+%22{{ aws_group.id | urlencode() }}%22+and+members+eq+%22{{ aws_user.user_id | urlencode() }}%22"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ aws_api_token }}"
+    status_code:
+      - 200
+  when: user_properties is defined
+  loop: "{{ aws_groups.json.Resources }}"
+  loop_control:
+    loop_var: aws_group
+  register: aws_user_groups
+
+- name: "Get group ids of requested groups"
+  uri:
+    url: "{{ aws_api_url }}/Groups?filter=displayName+eq+%22{{ aws_group | urlencode() }}%22"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ aws_api_token }}"
+    status_code:
+      - 200
+  when: user_properties is defined
+  loop: "{{ user_properties.groups }}"
+  loop_control:
+    loop_var: aws_group
+  register: aws_requested_groups
+
+- name: "Filter the ids"
+  set_fact:
+    aws_requested_group_ids: "{{ aws_requested_groups | community.general.json_query('results[*].json.Resources[*].id') | flatten }}"
+    aws_group_ids: "{{ aws_user_groups | community.general.json_query('results[*].json.Resources[*].id') | flatten }}"
+
+- name: "Diff to existing groups"
+  set_fact:
+    aws_user_add_to_groups: "{{ aws_requested_group_ids | difference(aws_group_ids) | flatten }}"
+    aws_user_del_from_groups: "{{ aws_group_ids | difference(aws_requested_group_ids) | flatten }}"
+
+- name: "Add AWS user {{ user_properties.email }} to {{ aws_user_add_to_groups | count }} group(s)"
+  uri:
+    url: "{{ aws_api_url }}/Groups/{{ aws_group }}"
+    method: PATCH
+    headers:
+      Authorization: "Bearer {{ aws_api_token }}"
+    body_format: json
+    body:
+      schemas:
+        - 'urn:ietf:params:scim:api:messages:2.0:PatchOp'
+      Operations:
+        - op: add
+          path: members
+          value:
+            - value: "{{ aws_user.user_id }}"
+    status_code:
+      - 204
+  when: user_properties is defined
+  loop: "{{ aws_user_add_to_groups }}"
+  loop_control:
+    loop_var: aws_group
+
+- name: "Remove AWS user {{ user_properties.email }} from {{ aws_user_del_from_groups | count }} group(s)"
+  uri:
+    url: "{{ aws_api_url }}/Groups/{{ aws_group }}"
+    method: DELETE
+    headers:
+      Authorization: "Bearer {{ aws_api_token }}"
+    body_format: json
+    body:
+      schemas:
+        - 'urn:ietf:params:scim:api:messages:2.0:PatchOp'
+      Operations:
+        - op: remove
+          path: members
+          value:
+            - value: "{{ aws_user.user_id }}"
+    status_code:
+      - 204
+  when: user_properties is defined
+  loop: "{{ aws_user_del_from_groups }}"
+  loop_control:
+    loop_var: aws_group

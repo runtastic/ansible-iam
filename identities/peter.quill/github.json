@@ -1,0 +1,10 @@
+{
+  "github": {
+    "username": "starlord",
+    "state": "present",
+    "role": "member",
+    "teams": [
+      "Guardians"
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+- name: Manage GitHub users
+  hosts: localhost
+  tasks:
+    - include_role:
+        name: github_user
+      vars:
+        user_state: '{{ item.github.state | default("present") }}'
+        user_properties:
+          username: "{{ item.github.username }}"
+          teams: "{{item.github.teams | default([])}}"
+          role: "{{ item.github.role | default('member') }}"
+      loop: "{{ user_details }}"
+      when: item.github is defined

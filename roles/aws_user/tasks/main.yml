@@ -1,0 +1,19 @@
+---
+- name: Manage AWS user via SCIM
+  scim_user:
+    base_url: "{{ aws_api_url }}"
+    authorization: "Bearer {{ aws_api_token }}"
+
+    givenName: "{{ user_properties.givenName }}"
+    familyName: "{{ user_properties.familyName }}"
+    userName: "{{ user_properties.email }}"
+    email: "{{ user_properties.email }}"
+
+    # query used to find the user
+    search_query: 'userName eq "{{ user_properties.email }}"'
+
+    state: "{{ user_state }}"
+  register: aws_user
+
+- include_tasks: manage_groups.yml
+  when: aws_user.exists

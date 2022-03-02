@@ -1,0 +1,65 @@
+- name: "Get GitHub team memberships of user {{ user_properties.username }}"
+  uri:
+    url: "{{ github_api_url }}/graphql"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ github_api_token }}"
+    body_format: json
+    body:
+      query: |
+        query TeamMemberships($org: String!, $user: String!) {
+          organization(login: $org) {
+            teams(first: 100, userLogins: [$user]) {
+              totalCount
+              nodes {
+                id
+                slug
+              }
+            }
+          }
+        }
+      variables:
+        org: "{{ github_api_org }}"
+        user: "{{ user_properties.username }}"
+    status_code:
+      - 200
+  when: user_properties is defined
+  register: github_team_memberships
+  no_log: true
+
+- name: Set Team membership variable
+  set_fact:
+    github_user_team_memberships: "{{ github_team_memberships.json | community.general.json_query('data.organization.teams.nodes[*].slug') }}"
+
+- name: "Diff to existing groups"
+  set_fact:
+    github_user_add_to_teams: "{{ user_properties.teams | difference(github_user_team_memberships) }}"
+    github_user_del_from_teams: "{{ github_user_team_memberships | difference(user_properties.teams) }}"
+
+- name: "Add GitHub user {{ user_properties.username }} to {{ github_user_add_to_teams | count }} teams(s)"
+  uri:
+    url: "{{ github_api_url }}/orgs/{{ github_api_org }}/teams/{{ github_group }}/memberships/{{ user_properties.username }}"
+    method: PUT
+    headers:
+      Authorization: "Bearer {{ github_api_token }}"
+    status_code:
+      - 200
+  when: user_properties is defined
+  loop: "{{ github_user_add_to_teams }}"
+  loop_control:
+    loop_var: github_group
+  no_log: true
+
+- name: "Remove GitHub user {{ user_properties.username }} from {{ github_user_del_from_teams | count }} team(s)"
+  uri:
+    url: "{{ github_api_url }}/orgs/{{ github_api_org }}/teams/{{ github_group }}/memberships/{{ user_properties.username }}"
+    method: DELETE
+    headers:
+      Authorization: "Bearer {{ github_api_token }}"
+    status_code:
+      - 204
+  when: user_properties is defined
+  loop: "{{ github_user_del_from_teams }}"
+  loop_control:
+    loop_var: github_group
+  no_log: true

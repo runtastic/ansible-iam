@@ -1,0 +1,12 @@
+- name: "Check GitHub user {{ user_properties.username }}"
+  uri:
+    url: "{{ github_api_url }}/orgs/{{ github_api_org }}/memberships/{{user_properties.username}}"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ github_api_token }}"
+    status_code:
+      - 200
+      - 404
+  when: user_properties is defined
+  register: github_user_exists
+  no_log: true

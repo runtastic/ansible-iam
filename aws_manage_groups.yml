@@ -1,0 +1,11 @@
+- name: Manage AWS groups
+  hosts: localhost
+  tasks:
+    - name: Manage Groups
+      vars:
+        group_state: '{{ item.state | default("present") }}'
+        group_properties:
+          displayName: "{{ item.name }}"
+      include_role:
+        name: aws_group
+      loop: "{{ groups_changed.aws }}"

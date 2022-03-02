@@ -1,0 +1,16 @@
+---
+
+- name: "Create AWS group {{ group_properties.displayName }}"
+  uri:
+    url: "{{ aws_api_url }}/Groups"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ aws_api_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      displayName: "{{ group_properties.displayName }}"
+    status_code:
+      - 201
+  when: group_properties is defined
+  register: group_exists_response

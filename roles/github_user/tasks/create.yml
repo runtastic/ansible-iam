@@ -1,0 +1,13 @@
+- name: "Add GitHub user {{ user_properties.username }} to GitHub Organization {{ github_api_org }}"
+  uri:
+    url: "{{ github_api_url }}/orgs/{{ github_api_org }}/memberships/{{user_properties.username}}"
+    method: PUT
+    headers:
+      Authorization: "Bearer {{ github_api_token }}"
+    body_format: json
+    body:
+      role: "{{ user_properties.role }}"
+    status_code:
+      - 200
+  register: github_user_exists
+  no_log: true
