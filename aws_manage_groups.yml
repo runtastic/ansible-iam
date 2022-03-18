@@ -8,4 +8,4 @@
           displayName: "{{ item.name }}"
       include_role:
         name: aws_group
-      loop: "{{ groups_changed.aws }}"
+      loop: "{{ group_details.aws }}"

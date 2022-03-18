@@ -1,0 +1,56 @@
+{
+  "group_details": [
+    {
+      "gsuite": [
+        {
+          "email": "avengers@guardians.com",
+          "name": "avengers",
+          "description": "",
+          "aliases": [],
+          "group_settings": {
+            "whoCanViewGroup": "ALL_IN_DOMAIN_CAN_VIEW",
+            "whoCanViewMembership": "ALL_IN_DOMAIN_CAN_VIEW"
+          },
+          "state": "present"
+        },
+        {
+          "email": "guardians@guardians.com",
+          "name": "guardians",
+          "description": "",
+          "aliases": [],
+          "group_settings": {},
+          "state": "present"
+        }
+      ]
+    }
+  ],
+  "user_details": [
+    {
+      "general": {
+        "uid": "peter.quill",
+        "firstname": "Peter",
+        "lastname": "Quill",
+        "email": "peter.quill@guardians.com"
+      },
+      "gsuite": {
+        "password": "default2change",
+        "changePasswordAtNextLogin": true,
+        "orgUnitPath": "/Employees",
+        "aliases": [
+          "starlord@guardians.com"
+        ],
+        "groups": {
+          "Avengers": {
+            "groupKey": "avengers@guardians.com",
+            "role": "MEMBER"
+          },
+          "Guardians": {
+            "groupKey": "guardians@guardians.com",
+            "role": "MEMBER"
+          }
+        },
+        "state": "present"
+      }
+    }
+  ]
+}
