@@ -1,0 +1,31 @@
+{
+  "group_details": [
+    {
+      "aws": [
+        {
+          "name": "Avengers"
+        },
+        {
+          "name": "Guardians"
+        }
+      ]
+    }
+  ],
+  "user_details": [
+    {
+      "general": {
+        "uid": "peter.quill",
+        "firstname": "Peter",
+        "lastname": "Quill",
+        "email": "peter.quill@guardians.com"
+      },
+      "aws": {
+        "state": "present",
+        "groups": [
+          "Avengers",
+          "Guardians"
+        ]
+      }
+    }
+  ]
+}
