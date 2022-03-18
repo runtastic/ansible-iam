@@ -1,0 +1,26 @@
+- name: Manage Google Workspace users
+  hosts: localhost
+  tasks:
+  - pip:
+      name:
+        - google-api-core==1.15.0
+        - google-api-python-client==1.8.4
+        - google-auth
+      extra_args: "--disable-pip-version-check --user"
+  - name: Manage users
+    gsuite_user:
+      google_private_key: '{{ google_private_key }}'
+      google_subject: '{{ google_subject }}'
+      email: '{{ item.general.email }}'
+      familyName: '{{ item.general.lastname }}'
+      givenName: '{{ item.general.firstname }}'
+      employeeId: '{{ item.general.uid }}'
+      password: '{{ item.gsuite.password | default("change.this.password.now!") }}'
+      changePasswordAtNextLogin: '{{ item.gsuite.changePasswordAtNextLogin | default(true) }}'
+      orgUnitPath: '{{ item.gsuite.orgUnitPath | default("/") }}'
+      aliases: '{{ item.gsuite.aliases }}'
+      groups: '{{ item.gsuite.groups }}'
+      suspended: false
+      transferUserEmail: '{{ item.gsuite.transferUserEmail | default("") }}'
+      state: '{{ item.gsuite.state | default("present") }}'
+    loop: "{{ user_details }}"

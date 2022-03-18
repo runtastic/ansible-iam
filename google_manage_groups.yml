@@ -1,0 +1,26 @@
+- name: Manage Google Workspace groups
+  hosts: localhost
+  gather_facts: no
+  tasks:
+  - pip:
+      name:
+        - google-api-core==1.15.0
+        - google-api-python-client==1.8.4
+        - google-auth
+      extra_args: "--disable-pip-version-check --user"
+
+  - name: Manage groups
+    gsuite_group:
+      google_private_key: '{{ google_private_key }}'
+      google_subject: '{{ google_subject }}'
+      email: '{{ item.email }}'
+      name: '{{ item.name }}'
+      description: '{{ item.description }}'
+      aliases: '{{ item.aliases | default([]) }}'
+      group_settings: '{{ item.group_settings | default(default_group_settings) }}'
+      state: '{{ item.state | default("present") }}'
+    loop: "{{ group_details.gsuite }}"
+    vars:
+      default_group_settings:
+        whoCanViewGroup: "ALL_IN_DOMAIN_CAN_VIEW"
+        whoCanViewMembership: "ALL_IN_DOMAIN_CAN_VIEW"
