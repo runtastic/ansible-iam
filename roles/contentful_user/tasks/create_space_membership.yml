@@ -1,0 +1,57 @@
+---
+
+- name: "Get roles of organization"
+  uri:
+    url: "{{ contentful_base_url }}/organizations/{{ contentful_org_id }}/roles"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ contentful_access_token }}"
+    status_code:
+      - 200
+  register: _contentful_org_roles_response
+  no_log: true
+
+- set_fact:
+    contentful_space_role_id: "{{ _contentful_org_roles_response | json_query(jmesquery) | default(fallback_user_object.space_role_id) }}"
+  vars:
+    fallback_user_object:
+      space_role_id: ""
+    jmesquery: "json.items[?name == '{{ user_properties.space_role }}'].sys.id"
+
+- name: "Add Contentful user {{ user_properties.email }} to Global Content Space"
+  uri:
+    url: "{{ contentful_base_url }}/spaces/{{ contentful_space_id }}/space_memberships"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ contentful_access_token }}"
+      Content-Type: "application/vnd.contentful.management.v1+json"
+    body_format: json
+    body:
+      admin: "{{ true if user_properties.space_role == 'admin' else false }}"
+      roles: 
+        - sys:
+            type: Link
+            linkType: Role
+            id: "{{ contentful_space_role_id[0] | default('') }}"
+      email: "{{ user_properties.email }}"
+    status_code:
+      - 201
+  register: _contentful_user_create_space_membership_response
+  no_log: true
+
+- name: "Get Space Membership id of Contentful user {{ user_properties.email }}"
+  uri:
+    url: "{{ contentful_base_url }}/organizations/{{ contentful_org_id }}/space_memberships?query={{ user_properties.email }}"
+    headers:
+      Authorization: "Bearer {{ contentful_access_token }}"
+  register: _contentful_user_space_membership_id_search_response
+  when: contentful_user_exists
+  no_log: true
+
+- set_fact:
+    contentful_user_space_membership_id: "{{ _contentful_user_space_membership_id_search_response | community.general.json_query('json.items[0].sys.id') | default(fallback_user_object.id) }}"
+    contentful_user_space_membership_version: "{{ _contentful_user_space_membership_id_search_response | community.general.json_query('json.items[0].sys.version') | default(fallback_user_object.version) }}"
+  vars:
+    fallback_user_object:
+      id: -1
+      version: 0

@@ -1,0 +1,39 @@
+---
+
+- name: "Get roles of organization"
+  uri:
+    url: "{{ contentful_base_url }}/organizations/{{ contentful_org_id }}/roles"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ contentful_access_token }}"
+    status_code:
+      - 200
+  register: _contentful_org_roles_response
+  no_log: true
+
+- set_fact:
+    contentful_space_role_id: "{{ _contentful_org_roles_response | json_query(jmesquery) | default(fallback_user_object.space_role_id) }}"
+  vars:
+    fallback_user_object:
+      space_role_id: ""
+    jmesquery: "json.items[?name == '{{ user_properties.space_role }}'].sys.id"
+
+- name: "Update the space membership (Global Content) of Contentful user {{ user_properties.email }}"
+  uri:
+    url: "{{ contentful_base_url }}/spaces/{{ contentful_space_id }}/space_memberships/{{ contentful_user_space_membership_id }}"
+    method: PUT
+    headers:
+      Authorization: "Bearer {{ contentful_access_token }}"
+      Content-Type: "application/vnd.contentful.management.v1+json"
+      X-Contentful-Version: "{{ contentful_user_space_membership_version }}"
+    body_format: json
+    body:
+      admin: "{{ true if user_properties.space_role == 'admin' else false }}"
+      roles: 
+        - sys:
+            type: Link
+            linkType: Role
+            id: "{{ contentful_space_role_id[0] | default('') }}"
+      email: "{{ user_properties.email }}"
+    status_code:
+      - 200

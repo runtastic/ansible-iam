@@ -1,0 +1,9 @@
+---
+
+# Vars that have to be set from outside:
+#contentful_base_url: "https://api.contentful.com"
+#contentful_access_token: "personal access token from here: https://app.contentful.com/account/profile/cma_tokens"
+#contentful_org_id: "id of the organization"
+
+user_state: "present"
+user_properties: {}

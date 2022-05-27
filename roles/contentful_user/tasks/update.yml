@@ -1,0 +1,17 @@
+---
+
+- name: "Update the Org membership of Contentful user {{ user_properties.email }}"
+  uri:
+    url: "{{ contentful_base_url }}/organizations/{{ contentful_org_id }}/organization_memberships/{{ contentful_user_org_membership_id }}"
+    method: PUT
+    headers:
+      Authorization: "Bearer {{ contentful_access_token }}"
+      Content-Type: "application/vnd.contentful.management.v1+json"
+      X-Contentful-Version: "{{ contentful_user_org_membership_version }}"
+    body_format: json
+    body:
+      role: '{{ user_properties.org_role }}'
+    status_code:
+      - 200
+  no_log: true
+  when: user_properties.org_role != "owner"
