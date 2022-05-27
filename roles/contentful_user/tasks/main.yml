@@ -1,0 +1,39 @@
+---
+- fail: msg="contentful_base_url is unset"
+  when: contentful_base_url is undefined
+- fail: msg="contentful_org_id is unset"
+  when: contentful_org_id is undefined
+- fail: msg="contentful_space_id is unset"
+  when: contentful_space_id is undefined
+
+- fail:
+    msg: |-
+      user_state must be either "present" or "absent"
+  when: not ((user_state == "present") or (user_state == "absent"))
+
+- name: Check if Contentful User exists
+  include_tasks: exists.yml
+
+- name: Create Contentful User
+  include_tasks: create.yml
+  when: user_state == "present" and not contentful_user_exists
+
+- name: Create Contentful Space Membership
+  include_tasks: create_space_membership.yml
+  when: user_state == "present" and contentful_user_space_membership_id == "" and user_properties.space_role != "none"
+
+- name: Update Contentful User
+  include_tasks: update.yml
+  when: user_state == "present" and contentful_user_exists
+
+- name: Update Contentful User Space Membership
+  include_tasks: update_space_membership.yml
+  when: user_state == "present" and contentful_user_space_membership_id != "" and user_properties.space_role != "none"
+
+- name: Delete Contentful User
+  include_tasks: delete.yml
+  when: user_state == "absent" and contentful_user_exists
+
+- name: Delete Contentful User Space Membership
+  include_tasks: delete_space_membership.yml
+  when: user_state == "present" and contentful_user_space_membership_id != "" and user_properties.space_role == "none"

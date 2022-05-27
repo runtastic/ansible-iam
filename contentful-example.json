@@ -1,0 +1,17 @@
+{
+  "user_details": [
+    {
+      "general": {
+        "uid": "peter.quill",
+        "firstname": "Peter",
+        "lastname": "Quill",
+        "email": "peter.quill@guardians.com"
+      },
+      "contentful": {
+        "state": "present",
+        "org_role": "member",
+        "space_role": "Editor"
+      }
+    }
+  ]
+}

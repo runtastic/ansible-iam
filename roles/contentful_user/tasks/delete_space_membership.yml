@@ -1,0 +1,11 @@
+---
+
+- name: "Delete the space membership (Global Content) of Contentful user {{ user_properties.email }}"
+  uri:
+    url: "{{ contentful_base_url }}/spaces/{{ contentful_space_id }}/space_memberships/{{ contentful_user_space_membership_id }}"
+    method: DELETE
+    headers:
+      Authorization: "Bearer {{ contentful_access_token }}"
+    status_code:
+      - 204
+  no_log: true

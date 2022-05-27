@@ -7,9 +7,10 @@ We recommend using **Ansible Automation Controller / Ansible Tower** or
 [AWX](https://github.com/ansible/awx) to get the most out of this solution.
 
 Currently implemented:
-- AWS
-- GitHub
-- Google Workspace
+- [AWS](https://aws.amazon.com/)
+- [Contentful](https://www.contentful.com/)
+- [GitHub](https://github.com/)
+- [Google Workspace](https://workspace.google.com/)
 
 ## Examples
 
@@ -25,6 +26,12 @@ ansible-playbook -i localhost, -c local ./aws_manage_users.yml -e @./example_var
 # aws_manage_groups.yml
 ansible-playbook -i localhost, -c local ./aws_manage_groups.yml -e @./example_vars/aws.json \
 -e "aws_api_url=https://scim.eu-central-1.amazonaws.com/<ID>/scim/v2/ aws_api_token=<AWS_API_TOKEN>"
+
+#### Contentful ####
+
+# contentful_manage_users.yml
+ansible-playbook -i localhost, -c local ./contentful_manage_users.yml -e @./contentful-example.json \
+-e "contentful_base_url=https://api.contentful.com contentful_access_token=<CONTENTFUL_ACCESS_TOKEN> contentful_org_id=<CONTENTFUL_ORG_ID>"
 
 #### GitHub ####
 

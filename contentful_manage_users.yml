@@ -1,0 +1,15 @@
+- name: Manage Contentful users
+  hosts: localhost
+  tasks:
+    - include_role:
+        name: contentful_user
+      vars:
+        user_state: "{{ item.contentful.state | default('present') }}"
+        user_properties:
+          firstname: "{{ item.general.firstname }}"
+          lastname: "{{ item.general.lastname }}"
+          email: "{{ item.general.email }}"
+          org_role: "{{ item.contentful.org_role }}"
+          space_role: "{{ item.contentful.space_role }}"
+      loop: "{{ user_details }}"
+      when: item.contentful is defined

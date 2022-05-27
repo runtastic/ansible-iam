@@ -1,0 +1,40 @@
+---
+
+- name: "Invite Contentful user {{ user_properties.email }}"
+  uri:
+    url: "{{ contentful_base_url }}/organizations/{{ contentful_org_id }}/invitations"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ contentful_access_token }}"
+      Content-Type: "application/vnd.contentful.management.v1+json"
+    body_format: json
+    body:
+      email: "{{ user_properties.email }}"
+      firstName: "{{ user_properties.firstname }}"
+      lastName: "{{ user_properties.lastname }}"
+      role: "{{ user_properties.org_role }}"
+    status_code:
+      - 201
+  register: _contentful_user_create_response
+  no_log: true
+
+- set_fact:
+    contentful_test: "{{ _contentful_user_create_response }}"
+    contentful_user_exists: true
+
+- name: "Get Org Membership Id of Contentful user {{ user_properties.email }}"
+  uri:
+    url: "{{ contentful_base_url }}/organizations/{{ contentful_org_id }}/organization_memberships?query={{ user_properties.email }}"
+    headers:
+      Authorization: "Bearer {{ contentful_access_token }}"
+  register: _contentful_user_org_membership_id_search_response
+  when: contentful_user_exists
+  no_log: true
+
+- set_fact:
+    contentful_user_org_membership_id: "{{ _contentful_user_org_membership_id_search_response | community.general.json_query('json.items[0].sys.id') | default(fallback_user_object.id) }}"
+    contentful_user_org_membership_version: "{{ _contentful_user_org_membership_id_search_response | community.general.json_query('json.items[0].sys.version') | default(fallback_user_object.version) }}"
+  vars:
+    fallback_user_object:
+      id: -1
+      version: 0
