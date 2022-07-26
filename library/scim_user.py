@@ -54,6 +54,11 @@ options:
       - Whether the user should be updated if they already exist.
       - Default is 'true'.
     required: false
+  ignored_attributes_on_update:
+    description:
+      - Do not send the following attributes during an update.
+      - Default is '[]'
+    required: false
   active:
     description:
       - Whether the user should be active.
@@ -92,15 +97,20 @@ EXAMPLES = '''
     userName: "frf"
     email: "fritz.fantom@runtastic.com"
     extra_attributes:
+      displayName: "frf"
       nickName: "frf"
       profileUrl: "https://runtastic.slack.com/team/frf"
       timezone: "Europe/Vienna"
+      title: "Grand Villain"
 
     # query used to find the user
     search_query: 'email Eq "fritz.fantom@runtastic.com"'
 
-    # do not update the user, only create/delete them
-    update: no
+    # when updating a user do not set these attributes again
+    ignored_attributes_on_update:
+    - givenName
+    - familyName
+    - timezone
 
     # Slack can not delete any users, only deactivate them.  So instead of
     # setting `state: absent`, you would need to do this:
@@ -202,7 +212,7 @@ def find_user(module, base_url, default_headers):
     return user['id'], user['active']
 
 
-def user_body(module):
+def user_body(module, ignored_attributes=[]):
     given_name       = module.params['givenName']
     family_name      = module.params['familyName']
     user_name        = module.params['userName']
@@ -228,7 +238,24 @@ def user_body(module):
         'active': True,
     }
 
-    return {**base_body, **extra_attributes}  # merge two dicts together
+    # special handling for familyName/givenName/email as it's part of the base body
+    if 'familyName' in ignored_attributes:
+        del(base_body['name']['familyName'])
+    if 'givenName' in ignored_attributes:
+        del(base_body['name']['givenName'])
+    if len(base_body['name']) == 0:
+        del(base_body['name'])
+    if 'email' in ignored_attributes:
+        del(base_body['emails'])
+
+    # merge two dicts together
+    merged = {**base_body, **extra_attributes}
+
+    # remove all other ignored attributes from the body
+    for attr in ignored_attributes:
+        merged.pop(attr, None)
+
+    return merged
 
 
 def create_user(module, base_url, default_headers):
@@ -307,8 +334,8 @@ def activate_user(module, base_url, default_headers, user_id, active=True):
     return True
 
 
-def update_user(module, base_url, default_headers, user_id):
-    body = {**user_body(module), 'id': user_id}
+def update_user(module, base_url, default_headers, user_id, ignored_attributes_on_update):
+    body = {**user_body(module, ignored_attributes=ignored_attributes_on_update), 'id': user_id}
 
     resp, info = fetch_url(
         module,
@@ -357,6 +384,7 @@ def run_module():
         userName=dict(type='str', required=True),
         email=dict(type='str', required=True),
         update=dict(type='bool', required=False, default=True),
+        ignored_attributes_on_update=dict(type='list', required=False, default=[]),
         active=dict(type='bool', required=False, default=True),
         scim_version=dict(type='str', required=False, default='v1', choices=['v1', 'v2']),
         extra_attributes=dict(type='dict', required=False, default=dict()),
@@ -408,6 +436,7 @@ def run_module():
     should_be_present = module.params['state'] != 'absent'
     should_update_user = module.params['update']
     should_be_active = module.params['active']
+    ignored_attributes_on_update = module.params['ignored_attributes_on_update']
 
     user_id, user_active = find_user(module, base_url, default_headers)
     if user_id is None:
@@ -468,7 +497,13 @@ def run_module():
 
             if user_active and should_update_user:
                 # user exists and is active -> update the user
-                update_user(module, base_url, default_headers, user_id)
+                update_user(
+                    module,
+                    base_url,
+                    default_headers,
+                    user_id,
+                    ignored_attributes_on_update,
+                )
                 # can't really tell if the user actually changed, so always set changed to true
                 result.update({'changed': True, 'updated': True})
         else:
