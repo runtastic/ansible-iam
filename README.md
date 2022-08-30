@@ -8,6 +8,7 @@ We recommend using **Ansible Automation Controller / Ansible Tower** or
 
 Currently implemented:
 - [AWS](https://aws.amazon.com/)
+- [Azure](https://portal.azure.com/)
 - [Contentful](https://www.contentful.com/)
 - [GitHub](https://github.com/)
 - [Google Workspace](https://workspace.google.com/)
@@ -26,6 +27,16 @@ ansible-playbook -i localhost, -c local ./aws_manage_users.yml -e @./example_var
 # aws_manage_groups.yml
 ansible-playbook -i localhost, -c local ./aws_manage_groups.yml -e @./example_vars/aws.json \
 -e "aws_api_url=https://scim.eu-central-1.amazonaws.com/<ID>/scim/v2/ aws_api_token=<AWS_API_TOKEN>"
+
+#### Azure ####
+
+# azure_manage_users.yml
+ansible-playbook -i localhost, -c local ./azure_manage_users.yml -e @./example_vars/azure.json \
+-e "azure_client_id=<AZURE_CLIENT_ID> azure_client_secret=<AZURE_CLIENT_SECRET> azure_tenant_id=<AZURE_TENANT_ID>"
+
+# azure_manage_groups.yml
+ansible-playbook -i localhost, -c local ./azure_manage_groups.yml -e @./example_vars/azure.json \
+-e "azure_client_id=<AZURE_CLIENT_ID> azure_client_secret=<AZURE_CLIENT_SECRET> azure_tenant_id=<AZURE_TENANT_ID>"
 
 #### Contentful ####
 

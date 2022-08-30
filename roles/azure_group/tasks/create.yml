@@ -1,0 +1,24 @@
+---
+
+- name: "Create Azure group {{ group_properties.displayName }}"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/groups"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      displayName: "{{ group_properties.displayName }}"
+      description: "{{ group_properties.description }}"
+      securityEnabled: true
+      mailEnabled: false
+      mailNickname: "{{ 99999999 | random | to_uuid }}"
+    status_code:
+      - 201
+  when: group_properties is defined
+  register: group_exists_response
+
+- name: "Set Azure group id"
+  set_fact:
+    azure_group_id: "{{ group_exists_response.json.id }}"

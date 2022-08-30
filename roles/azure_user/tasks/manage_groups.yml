@@ -1,0 +1,63 @@
+- name: "Get groups of Azure user {{ user_properties.username }}"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/users/{{user_properties.username}}/memberOf/microsoft.graph.group?$count=true&$select=displayName,id"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+    status_code:
+      - 200
+  when: user_properties is defined
+  register: azure_user_groups
+
+- name: "Get group ids of requested groups"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/groups?$count=true&$filter=displayName+eq+'{{ azure_group | urlencode() }}'&$select=displayName,id"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+    status_code:
+      - 200
+  when: user_properties is defined
+  loop: "{{ user_properties.groups }}"
+  loop_control:
+    loop_var: azure_group
+  register: azure_requested_groups
+
+- name: "Exclude ignored groups"
+  set_fact:
+    azure_user_all_groups: "{{ azure_user_groups.json | community.general.json_query('value[*].{displayName: displayName, id: id}') | difference(azure_user_ignored_groups) }}"
+    azure_requested_groups: "{{ azure_requested_groups | community.general.json_query('results[*].json.value[*].{displayName: displayName, id: id}') | flatten }}"
+
+- name: "Diff to existing groups"
+  set_fact:
+    azure_user_add_to_groups: "{{ azure_requested_groups | difference(azure_user_all_groups) | flatten }}"
+    azure_user_del_from_groups: "{{ azure_user_all_groups | difference(azure_requested_groups) | flatten }}"
+
+- name: "Add Azure user {{ user_properties.username }} to {{ azure_user_add_to_groups | count }} group(s)"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/groups/{{ azure_group.id }}/members/$ref"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+    body_format: json
+    body:
+      "@odata.id": "https://graph.microsoft.com/v1.0/directoryObjects/{{ azure_user_exists.json.id }}"
+    status_code:
+      - 204
+  when: user_properties is defined
+  loop: "{{ azure_user_add_to_groups }}"
+  loop_control:
+    loop_var: azure_group
+
+- name: "Remove Azure user {{ user_properties.username }} from {{ azure_user_del_from_groups | count }} group(s)"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/groups/{{ azure_group.id }}/members/{{ azure_user_exists.json.id }}/$ref"
+    method: DELETE
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+    status_code:
+      - 204
+  when: user_properties is defined
+  loop: "{{ azure_user_del_from_groups }}"
+  loop_control:
+    loop_var: azure_group

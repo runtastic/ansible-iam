@@ -1,0 +1,16 @@
+- name: "Get Azure Graph API Token"
+  uri:
+    url: "https://login.microsoftonline.com/{{ azure_tenant_id }}/oauth2/v2.0/token"
+    method: POST
+    status_code:
+      - 200
+      - 404
+    body_format: form-urlencoded
+    body:
+      client_id: "{{ azure_client_id }}"
+      scope: "https://graph.microsoft.com/.default"
+      client_secret: "{{ azure_client_secret }}"
+      grant_type: "client_credentials"
+  when: user_properties is defined
+  register: azure_client_credentials
+  no_log: true

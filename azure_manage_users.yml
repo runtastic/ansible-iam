@@ -1,0 +1,19 @@
+- name: Manage Azure users
+  hosts: localhost
+  tasks:
+    - include_role:
+        name: azure_user
+      vars:
+        user_state: '{{ item.azure.state | default("present") }}'
+        user_properties:
+          username: "{{ item.general.email }}"
+          displayName: "{{ item.general.firstname }} {{ item.general.lastname }}"
+          password: "{{ item.azure.password }}"
+          groups: "{{item.azure.groups | default([])}}"
+        azure_user_ignored_groups:
+          - displayName: "Guardians Inc."
+            id: 6ff5f924-e8be-4899-93bc-d7518b261f2e
+          - displayName: "All Users"
+            id: c58cf0c7-3f62-48f6-83e5-105c00da31a9
+      loop: "{{user_details}}"
+      when: item.azure is defined

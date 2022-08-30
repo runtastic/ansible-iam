@@ -1,0 +1,36 @@
+{
+  "group_details": [
+    {
+      "azure": [
+        {
+          "name": "Avengers",
+          "description": "Cool team",
+          "licenses": []
+        },
+        {
+          "name": "Guardians",
+          "description": "The best team in the galaxy",
+          "licenses": []
+        }
+      ]
+    }
+  ],
+  "user_details": [
+    {
+      "general": {
+        "uid": "peter.quill",
+        "firstname": "Peter",
+        "lastname": "Quill",
+        "email": "peter.quill@guardians.com"
+      },
+      "azure": {
+        "password": "st4rl0rd#rOck5!",
+        "groups": [
+          "Guardians",
+          "Avengers"
+        ],
+        "state": "present"
+      }
+    }
+  ]
+}

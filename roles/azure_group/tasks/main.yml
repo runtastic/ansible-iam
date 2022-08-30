@@ -1,0 +1,26 @@
+---
+- fail:
+    msg: |-
+      group_state must be either "present" or "absent"
+  when: not ((group_state == "present") or (group_state == "absent"))
+
+- include_tasks: login.yml
+
+- name: "Set Azure group id to empty value"
+  set_fact:
+    azure_group_id: ""
+
+- include_tasks: exists.yml
+
+- include_tasks: create.yml
+  when: group_state == "present" and azure_group_id == ""
+
+- include_tasks: update.yml
+  when: group_state == "present" and azure_group_id != ""
+
+- include_tasks: delete.yml
+  when: group_state == "absent" and azure_group_id != ""
+
+- name: "Unset Azure group id"
+  set_fact:
+    azure_group_id: ""

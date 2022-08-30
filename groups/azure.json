@@ -1,0 +1,14 @@
+{
+  "azure": [
+    {
+      "name": "Avengers",
+      "description": "Cool team",
+      "licenses": []
+    },
+    {
+      "name": "Guardians",
+      "description": "The best team in the galaxy",
+      "licenses": []
+    }
+  ]
+}

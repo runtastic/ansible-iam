@@ -1,0 +1,13 @@
+- name: Manage Azure groups
+  hosts: localhost
+  tasks:
+    - name: Manage Groups
+      vars:
+        group_state: "{{ item.state | default('present') }}"
+        group_properties:
+          displayName: "{{ item.name }}"
+          description: "{{ item.description }}"
+          licenses: "{{ item.licenses }}"
+      include_role:
+        name: azure_group
+      loop: "{{ groups_changed.azure }}"
