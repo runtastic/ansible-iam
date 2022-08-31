@@ -1,0 +1,96 @@
+---
+
+- name: "Update Azure group {{ group_properties.displayName }}"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/groups/{{ azure_group_id }}"
+    method: PATCH
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      description: "{{ group_properties.description }}"
+    status_code:
+      - 204
+  when: group_properties is defined
+
+- name: "Get available licenses"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/subscribedSkus?$select=skuPartNumber,skuId"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+      Content-Type: "application/json"
+    status_code:
+      - 200
+  when: group_properties is defined
+  register: azure_available_licenses
+
+- name: "Create license ids list"
+  set_fact:
+    azure_group_license_ids: []
+
+- name: "Get id(s) of requested licenses"
+  set_fact:
+    azure_group_license_ids: "{{ azure_group_license_ids + [ azure_available_licenses | community.general.json_query(jmesquery) | flatten ] }}"
+  vars:
+    jmesquery: "json.value[?skuPartNumber == '{{ azure_license }}'].skuId"
+  loop: "{{ group_properties.licenses }}"
+  loop_control:
+    loop_var: azure_license
+
+- name: "Get assigned licenses for Azure group {{ group_properties.displayName }}"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/groups/{{ azure_group_id }}?$select=assignedLicenses"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+      Content-Type: "application/json"
+    status_code:
+      - 200
+  when: group_properties is defined
+  register: azure_assigned_licenses
+
+- name: "Sort the lists"
+  set_fact:
+    azure_group_license_ids: "{{ azure_group_license_ids | sort | flatten }}"
+    azure_assigned_licenses: "{{ azure_assigned_licenses | community.general.json_query('json.assignedLicenses[*].skuId') | sort }}"
+
+- name: "Diff to requested licenses"
+  set_fact:
+    azure_group_add_license: "{{ azure_group_license_ids | difference(azure_assigned_licenses) }}"
+    azure_group_del_license: "{{ azure_assigned_licenses | difference(azure_group_license_ids) }}"
+
+- name: "Add {{ azure_group_add_license | count }} license(s) to Azure group {{ group_properties.displayName }}"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/groups/{{ azure_group_id }}/assignLicense"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      addLicenses: 
+         - skuId: "{{ azure_license }}"
+      removeLicenses: []
+    status_code:
+      - 202
+  when: group_properties is defined
+  loop: "{{ azure_group_add_license }}"
+  loop_control:
+    loop_var: azure_license
+
+- name: "Remove {{ azure_group_del_license | count }} license(s) from Azure group {{ group_properties.displayName }}"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/groups/{{ azure_group_id }}/assignLicense"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      addLicenses: []
+      removeLicenses: "{{ azure_group_del_license }}"
+    status_code:
+      - 202
+  when: azure_group_del_license != []

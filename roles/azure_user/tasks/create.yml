@@ -1,0 +1,20 @@
+- name: "Create Azure user {{ user_properties.username }}"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/users"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      accountEnabled: "true"
+      displayName: "{{ user_properties.displayName }}"
+      mailNickname: '{{ user_properties.username.split("@")[0] }}'
+      userPrincipalName: "{{ user_properties.username }}"
+      passwordProfile:
+        forceChangePasswordNextSignIn: true
+        password: "{{ user_properties.password }}"
+    status_code:
+      - 201
+  when: user_properties is defined
+  register: azure_user_exists

@@ -1,0 +1,10 @@
+{
+  "azure": {
+    "password": "st4rl0rd#rOck5!",
+    "groups": [
+      "Guardians",
+      "Avengers"
+    ],
+    "state": "present"
+  }
+}

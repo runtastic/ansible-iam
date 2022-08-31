@@ -1,0 +1,13 @@
+- name: "Update Azure user {{ user_properties.username }}"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/users/{{ user_properties.username }}"
+    method: PATCH
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      displayName: "{{ user_properties.displayName }}"
+    status_code:
+      - 204
+  when: user_properties is defined

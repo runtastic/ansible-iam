@@ -1,0 +1,17 @@
+---
+
+- name: "Check if Azure group {{group_properties.displayName}} exists and get id"
+  uri:
+    url: "https://graph.microsoft.com/v1.0/groups?$count=true&$filter=displayName+eq+'{{ group_properties.displayName | urlencode() }}'&$select=displayName,id"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ azure_client_credentials.json.access_token }}"
+    status_code:
+      - 200
+  when: group_properties is defined
+  register: group_exists_response
+
+- name: "Set Azure group id"
+  set_fact:
+    azure_group_id: "{{ group_exists_response.json.value[0].id }}"
+  when: group_exists_response.json.value[0] is defined

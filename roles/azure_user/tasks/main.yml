@@ -1,0 +1,16 @@
+---
+- include_tasks: login.yml
+
+- include_tasks: exists.yml
+
+- include_tasks: create.yml
+  when: user_state == "present" and azure_user_exists.status == 404
+
+- include_tasks: update.yml
+  when: user_state == "present" and (azure_user_exists.status == 200 or azure_user_exists.status == 201)
+
+- include_tasks: manage_groups.yml
+  when: user_state == "present"
+
+- include_tasks: delete.yml
+  when: user_state == "absent" and azure_user_exists.status == 200
