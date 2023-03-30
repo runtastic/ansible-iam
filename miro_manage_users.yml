@@ -1,0 +1,42 @@
+---
+- name: Manage Miro users
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Manage Miro users via SCIM
+      scim_user:
+        base_url: "https://miro.com/api/v1/scim"
+        authorization: "Bearer {{ miro_api_token }}"
+        scim_version: 'v2'
+
+        givenName: "{{ item.general.firstname }}"
+        familyName: "{{ item.general.lastname }}"
+        userName: "{{ item.general.email }}"
+        email: "{{ item.general.email }}"
+
+        # Assign every user a `Full` license.
+        #
+        # > When userType is not specified, user license is updated/set
+        # > according to internal Miro logic, which depends on the
+        # > organization plan.
+        # -- https://developers.miro.com/docs/scim-users
+        #
+        # apparently `Full` is the only supported value anyway so... ¯\_(ツ)_/¯
+        extra_attributes:
+          userType: 'Full'
+
+        # query used to find the user via the SCIM API
+        search_query: 'userName Eq "{{ item.general.email }}"'
+
+        # The accounts of the users will be deleted completely.  All data will
+        # be transferred to the first admin of the team.
+        #
+        # This action (or even just deactivating them) fails if the user is
+        # the last owner of the team.
+        state: '{{ item.miro.state }}'
+      loop: "{{ user_details }}"
+      when: item.miro is defined
+      register: miro_user
+      retries: 5
+      delay: 15
+      until: miro_user is not failed
