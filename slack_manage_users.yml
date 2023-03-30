@@ -1,0 +1,35 @@
+- name: Manage Slack users
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Manage Slack users via SCIM
+      scim_user:
+        base_url: "https://api.slack.com/scim/v1"
+        authorization: "Bearer {{ slack_api_token }}"
+
+        givenName: "{{ item.general.firstname }}"
+        familyName: "{{ item.general.lastname }}"
+        userName: "{{ item.slack.nickname | default(item.general.uid) }}"
+        email: "{{ item.general.email }}"
+        extra_attributes:
+          displayName: "{{ item.slack.nickname | default(item.general.uid) }}"
+          nickName: "{{ item.slack.nickname | default(item.general.uid) }}"
+          profileUrl: "https://company.slack.com/team/{{ item.slack.nickname | default(item.general.uid) }}"
+          timezone: "Europe/Vienna"
+          title: "{{ item.general.jobTitle | default('Mysterious person') }}"
+
+        # query used to find the user via the SCIM API
+        search_query: 'email Eq "{{ item.general.email }}"'
+
+        # when updating a user do not set these attributes again
+        ignored_attributes_on_update:
+        - givenName
+        - familyName
+        - timezone
+
+        # Slack can not delete any users, only deactivate them.  So instead of
+        # setting `state: absent`, we need to modify the `active` option:
+        active: '{{ (item.slack.state | default("present")) != "absent" }}'
+        state: present  # always present due to the above
+      loop: "{{ user_details }}"
+      when: (item.slack is defined) and (item.general.uid != "<OWNER-ACCOUNT>")
