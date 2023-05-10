@@ -4,8 +4,9 @@
   tasks:
     - name: Manage Slack users via SCIM
       scim_user:
-        base_url: "https://api.slack.com/scim/v1"
+        base_url: "https://api.slack.com/scim/v2"
         authorization: "Bearer {{ slack_api_token }}"
+        scim_version: "v2"
 
         givenName: "{{ item.general.firstname }}"
         familyName: "{{ item.general.lastname }}"
