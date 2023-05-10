@@ -263,7 +263,10 @@ def create_user(module, base_url, default_headers):
     schemas = []
 
     if use_scim_v2:
-        pass # TODO: figure out which schema ot use
+        schemas = [
+            'urn:ietf:params:scim:schemas:core:2.0:User',
+            'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User',
+        ]
     else:
         schemas = [
             'urn:scim:schemas:core:1.0',
@@ -336,6 +339,16 @@ def activate_user(module, base_url, default_headers, user_id, active=True):
 
 def update_user(module, base_url, default_headers, user_id, ignored_attributes_on_update):
     body = {**user_body(module, ignored_attributes=ignored_attributes_on_update), 'id': user_id}
+    use_scim_v2 = module.params['scim_version'] == 'v2'
+
+    if use_scim_v2:
+        body = {
+            'schemas': [
+                'urn:ietf:params:scim:schemas:core:2.0:User',
+                'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User',
+            ],
+            **body
+        }
 
     resp, info = fetch_url(
         module,
